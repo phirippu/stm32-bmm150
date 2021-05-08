@@ -43,6 +43,12 @@ extern "C" {
 
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
+#define RXBUFSIZE 64
+#define DS3231_ADDRESS 0xD0
+#define PCA9534_ADDRESS 0x40
+#define BMP280_ADDRESS 0xEC
+#define LSM303A_ADDRESS (0x19<<1)
+#define LSM303M_ADDRESS (0x1E<<1)
 
 /* USER CODE END EC */
 
@@ -59,7 +65,14 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define LED_Pin GPIO_PIN_13
+#define LED_GPIO_Port GPIOC
 /* USER CODE BEGIN Private defines */
+extern uint8_t rxBuffer[RXBUFSIZE];
+extern volatile uint8_t rxBufferPos;
+extern volatile uint8_t tick;
+extern volatile uint8_t step;
+extern volatile unsigned data_ready;
 
 /* USER CODE END Private defines */
 
