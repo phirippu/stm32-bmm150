@@ -1,5 +1,5 @@
 # STM32-BMM150
-An STM32 code based on the Bosch BMM150 sensor API written for the STM32 Black Pill (STM32F411 w/USB-C). The code is a part of the Special Course in Space Technology being taught at the University of Turku.
+An STM32 code based on the Bosch BMM150 sensor API. The target hardware is the STM32 Black Pill (STM32F411 w/USB-C) connected to the BMM150 module via I2C. The code is a part of the Special Course in Space Technology being taught at the University of Turku.
 
 ## BMM150 sensor API
 
