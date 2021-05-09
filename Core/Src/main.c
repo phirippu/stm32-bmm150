@@ -18,13 +18,11 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include <bmm150_common.h>
 #include "main.h"
 #include "i2c.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
-#include "stdio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -100,8 +98,10 @@ static int8_t set_config(struct bmm150_dev *dev) {
         /* Setting the preset mode as Low power mode
          * i.e. data rate = 10Hz, XY-rep = 1, Z-rep = 2
          */
-        settings.preset_mode = BMM150_PRESETMODE_LOWPOWER;
+        settings.preset_mode = BMM150_PRESETMODE_HIGHACCURACY;                  // TODO Change it to the desired preset
         rslt = bmm150_set_presetmode(&settings, dev);
+        settings.data_rate = BMM150_DATA_RATE_02HZ;                             // TODO Change it to the desired ODR
+        bmm150_set_sensor_settings(BMM150_SEL_DATA_RATE, &settings, dev);
         bmm150_error_codes_print_result("bmm150_set_presetmode", rslt);
 
         if (rslt == BMM150_OK) {
@@ -110,41 +110,6 @@ static int8_t set_config(struct bmm150_dev *dev) {
             rslt = bmm150_set_sensor_settings(BMM150_SEL_DRDY_PIN_EN, &settings, dev);
             bmm150_error_codes_print_result("bmm150_set_sensor_settings", rslt);
         }
-    }
-
-    return rslt;
-}
-
-/*!
- *  @brief This internal API is used to get gyro data.
- */
-static int8_t get_data(struct bmm150_dev *dev) {
-    /* Status of api are returned to this variable. */
-    int8_t rslt;
-
-    int8_t idx;
-
-    struct bmm150_mag_data mag_data;
-
-    /* Reading the mag data */
-    while (1) {
-        /* Get the interrupt status */
-        rslt = bmm150_get_interrupt_status(dev);
-
-        if (dev->int_status & BMM150_INT_ASSERTED_DRDY) {
-            printf("Data interrupt occurred\n");
-
-            for (idx = 0; idx < 50; idx++) {
-                /* Read mag data */
-                rslt = bmm150_read_mag_data(&mag_data, dev);
-                bmm150_error_codes_print_result("bmm150_read_mag_data", rslt);
-
-                /* Unit for magnetometer data is microtesla(uT) */
-                printf("MAG DATA[%d]  X : %d uT   Y : %d uT   Z : %d uT\n", idx, mag_data.x, mag_data.y, mag_data.z);
-            }
-        }
-
-        break;
     }
 
     return rslt;
@@ -183,14 +148,19 @@ int main(void) {
     MX_I2C1_Init();
     MX_TIM11_Init();
     MX_USART1_UART_Init();
+    MX_TIM10_Init();
     /* USER CODE BEGIN 2 */
     HAL_TIM_Base_Start_IT(&htim11);
+    HAL_TIM_Base_Start(&htim10);
     HAL_NVIC_EnableIRQ(USART1_IRQn);
     HAL_UART_MspInit(&huart1);
     RetargetInit(&huart1);
+    HAL_I2C_Init(&hi2c1);
 
     /* Sensor initialization configuration. */
     struct bmm150_dev dev;
+    struct bmm150_mag_data mag_data;
+
     /* Status of api are returned to this variable */
     int8_t rslt;
 
@@ -205,10 +175,10 @@ int main(void) {
             rslt = set_config(&dev);
             bmm150_error_codes_print_result("set_config", rslt);
 
-            if (rslt == BMM150_OK) {
-                rslt = get_data(&dev);
-                bmm150_error_codes_print_result("get_data", rslt);
-            }
+//            if (rslt == BMM150_OK) {
+//                rslt = get_data(&dev);
+//                bmm150_error_codes_print_result("get_data", rslt);
+//            }
         }
     }
 
@@ -223,9 +193,17 @@ int main(void) {
 
         /* USER CODE BEGIN 3 */
         if (tick == 0) {
-            HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
-            printf("HAL!\n");
+            HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+            bmm150_user_delay_us(100, NULL);
+            HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
             tick = 199;
+        }
+//        /* Get the interrupt status */
+        bmm150_get_interrupt_status(&dev);
+        if (dev.int_status & BMM150_INT_ASSERTED_DRDY) {
+            /* Read mag data */
+            bmm150_read_mag_data(&mag_data, &dev);
+            printf("X/Y/Z %d %d %d uT\n", mag_data.x, mag_data.y, mag_data.z);
         }
     }
 #pragma clang diagnostic pop
