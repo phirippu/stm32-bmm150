@@ -1,4 +1,7 @@
-# BMM150 sensor API
+# STM32-BMM150
+An STM32 code based on the Bosch BMM150 sensor API written for the STM32 Black Pill (STM32F411 w/USB-C). The code is a part of the Special Course in Space Technology being taught at the University of Turku.
+
+## BMM150 sensor API
 
 ### Sensor overview
 
@@ -25,4 +28,5 @@ compass, navigation or augmented reality.
 - [Community support page](https://community.bosch-sensortec.com)
 
 ---
-#### Copyright (C) 2020 Bosch Sensortec GmbH
+#### BMM150 sensor API copyright (C) 2020 Bosch Sensortec GmbH
+#### UART IO retarget code copyright (C) Carmine Noviello
